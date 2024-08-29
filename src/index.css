@@ -1,0 +1,5 @@
+/* Importaciones de tailwind */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

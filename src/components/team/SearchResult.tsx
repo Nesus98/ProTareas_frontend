@@ -1,0 +1,58 @@
+import { addUserToProject } from "@/api/TeamAPI";
+import { TeamMember } from "@/types/index";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+
+type SearchResultProps = {
+  user: TeamMember;
+  reset: () => void;
+};
+export default function SearchResult({ user, reset }: SearchResultProps) {
+  // Hook para obtener los parámetros de la URL de la ruta actual
+  const params = useParams();
+  // Extrae el ID del proyecto de los parámetros de la URL
+  const projectId = params.projectId!;
+
+  // Hook para acceder y manipular el caché de consultas de React Query
+  const queryClient = useQueryClient();
+
+  // Configuración del hook useMutation para manejar la mutación de agregar un usuario al proyecto
+  const { mutate } = useMutation({
+    mutationFn: addUserToProject,
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onSuccess: (data) => {
+      toast.success(data);
+      reset();
+      // Invalida las consultas asociadas al equipo del proyecto para que se actualicen
+      queryClient.invalidateQueries({ queryKey: ["projectTeam", projectId] });
+    },
+  });
+
+  // Función que se llama para agregar un usuario al proyecto
+  const handleAddUserToProject = () => {
+    const data = {
+      projectId,
+      id: user._id,
+    };
+    // Ejecuta la mutación con los datos proporcionados
+    mutate(data);
+  };
+
+  return (
+    <>
+      <p className="mt-10 text-center font-bold">Resultado:</p>
+      <div className="flex justify-between items-center">
+        <p>{user.name}</p>
+        <button
+          className="text-purple-600 hover:bg-purple-100 px-10 py-3 font-bold cursor-pointer"
+          onClick={handleAddUserToProject}
+        >
+          Agregar al Proyecto
+        </button>
+      </div>
+    </>
+  );
+}
